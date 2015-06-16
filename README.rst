@@ -1,4 +1,5 @@
-# pygido
+pygido
+=========
 
 My PYthon GIt DOcker integrated tool.
 
@@ -19,20 +20,32 @@ Here are the basic use cases I would like to address with this tool :
   ready to launch in a single command.
 
 
-# Install
+Install
+-------------
 
 You need Python.
 
-Symlink the pgd.py script.
+Symlink the pgd.py script ::
 
-# Usage
+  sudo ln -s `pwd`/pygido/pgd.py /usr/bin/pgd
 
-Run the container for the current project/branch
-```
-pgd run
-```
 
-Build the container for the current project/branch
-```
-pgd build
-```
+Usage
+---------
+
+Run the container for the current project/branch ::
+
+    pgd run
+
+
+Build the container for the current project/branch ::
+
+  pgd build
+
+
+
+TODO
+---------
+
+* add more use cases
+* add conf file to set fallback docker image
