@@ -21,7 +21,7 @@ Here are the basic use cases I would like to address with this tool :
 
 * The laptop I am working on is not mine. I want to be able to write code
   with a graphical IDE.
-  
+
 
 Install
 -------------
@@ -52,4 +52,5 @@ TODO
 
 * add more use cases
 * add conf file to set fallback docker image
-* integrate docker machine
+* integrate docker machine (to work remotly)
+* integrate docker compose (to set up multiple container at once)

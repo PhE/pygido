@@ -40,7 +40,7 @@ try:
         #TODO: disable output
         git_branch = subprocess.check_output(
                 'cd %s && git rev-parse --abbrev-ref HEAD' % tmp_path,
-                stderr=FNULL, shell=True).strip()
+                stderr=FNULL, shell=True).strip().lower()
         app_path = tmp_path
         tmp_path, app_name = os.path.split(tmp_path)
 except subprocess.CalledProcessError:
@@ -83,6 +83,7 @@ elif args.command == 'run':
     # thanks to http://fabiorehm.com/blog/2014/09/11/running-gui-apps-with-docker/
     #TODO: add  $1 $2 $3 $4 $5
     cmd = '''docker run -it --rm \
+-v %(app_path)s:/var/myapp \
 -v %(app_path)s:/var/%(app_name)s \
 -v %(current_dir)s:/current_dir \
 -v $HOME/.Xauthority:/root/.Xauthority \
