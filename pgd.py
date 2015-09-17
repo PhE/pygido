@@ -50,7 +50,7 @@ if app_name is None:
     print "This is not a git repository !"
     sys.exit(0)
 
-docker_image = '%s-%s' % (app_name, git_branch)
+docker_image = '%s-%s' % (app_name.lower(), git_branch)
 #TODO: guess DockerFile
 docker_file_path = os.path.join(app_path, 'container', 'dev')
 #extra_args = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else ''
