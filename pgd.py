@@ -73,16 +73,11 @@ except:
         docker_image = default_image
 
 
-if args.command == 'build':
-    #TODO: add  $1 $2 $3 $4 $5
-    cmd = 'docker build -t %(docker_image)s %(docker_file_path)s' % locals()
-    print 'exec :', cmd
-    if not args.dry:
-        subprocess.call(cmd, shell=True)
-elif args.command == 'run':
-    # thanks to http://fabiorehm.com/blog/2014/09/11/running-gui-apps-with-docker/
-    #TODO: add  $1 $2 $3 $4 $5
-    cmd = '''docker run -it --rm \
+#TODO: add  $1 $2 $3 $4 $5
+cmd_build = 'docker build -t %(docker_image)s %(docker_file_path)s' % locals()
+# thanks to http://fabiorehm.com/blog/2014/09/11/running-gui-apps-with-docker/
+#TODO: add  $1 $2 $3 $4 $5
+cmd_run = '''docker run -it --rm \
 -v %(app_path)s:/var/myapp \
 -v %(app_path)s:/var/%(app_name)s \
 -v %(current_dir)s:/current_dir \
@@ -92,10 +87,19 @@ elif args.command == 'run':
 --net=host \
 %(docker_image)s
 ''' % locals()
+
+if args.command == 'build':
+    print 'exec :', cmd
+    if not args.dry:
+        subprocess.call(cmd_build, shell=True)
+elif args.command == 'run':
     #--hostname="%(docker_image)s" \
     print 'exec :', cmd
     if not args.dry:
-        subprocess.call(cmd, shell=True)
+        subprocess.call(cmd_run, shell=True)
 elif args.command == 'info':
     print 'App path : %s' % app_path
     print 'current_dir : %s' % current_dir
+    print 'Docker commands :\n'
+    print cmd_build
+    print cmd_run
