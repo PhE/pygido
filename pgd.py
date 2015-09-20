@@ -89,12 +89,12 @@ cmd_run = '''docker run -it --rm \
 ''' % locals()
 
 if args.command == 'build':
-    print 'exec :', cmd
+    print 'exec :', cmd_build
     if not args.dry:
         subprocess.call(cmd_build, shell=True)
 elif args.command == 'run':
     #--hostname="%(docker_image)s" \
-    print 'exec :', cmd
+    print 'exec :', cmd_run
     if not args.dry:
         subprocess.call(cmd_run, shell=True)
 elif args.command == 'info':

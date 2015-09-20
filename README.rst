@@ -16,11 +16,11 @@ Here are the basic use cases I would like to address with this tool :
   to run a docker container with all my dev tools in a single command.
 
 * I work on 2 different branches of the same project.
-  Each branch has its own dependencies. I want 2 different docker image
+  Each branch has its own dependencies. I want 2 different docker images
   ready to launch in a single command.
 
 * The laptop I am working on is not mine. I want to be able to write code
-  with a graphical IDE.
+  with a graphical IDE at a minimal setupcost.
 
 
 Install
