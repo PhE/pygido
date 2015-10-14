@@ -85,8 +85,7 @@ cmd_run = '''docker run -it --rm \
 -e DISPLAY \
 --workdir="/current_dir" \
 --net=host \
-%(docker_image)s
-''' % locals()
+%(docker_image)s''' % locals()
 
 if args.command == 'build':
     print 'exec :', cmd_build
@@ -94,9 +93,14 @@ if args.command == 'build':
         subprocess.call(cmd_build, shell=True)
 elif args.command == 'run':
     #--hostname="%(docker_image)s" \
-    print 'exec :', cmd_run
-    if not args.dry:
-        subprocess.call(cmd_run, shell=True)
+    if os.path.exists(os.path.join(app_path, 'container', 'dev', 'autoexec_docker')):
+        print 'exec autoexec_docker :', cmd_run+" sh -c '/sbin/setuser alan /current_dir/container/dev/autoexec_docker'"
+        if not args.dry:
+            subprocess.call(cmd_run+" sh -c '/sbin/setuser alan /current_dir/container/dev/autoexec_docker'", shell=True)
+    else:
+        print 'exec default :', cmd_run
+        if not args.dry:
+            subprocess.call(cmd_run, shell=True)
 elif args.command == 'info':
     print 'App path : %s' % app_path
     print 'current_dir : %s' % current_dir
