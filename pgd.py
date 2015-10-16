@@ -46,16 +46,17 @@ try:
         tmp_path, app_name = os.path.split(tmp_path)
 except subprocess.CalledProcessError:
     pass
+if app_name is None:
+    app_path = current_dir
 
 #output = git_branch = subprocess.check_output('git rev-parse --is-inside-work-tree',
 #    stderr=FNULL, shell=True).strip().lower())
 #print output
 
-if app_name is None:
-    print "This is not a git repository !"
-    sys.exit(0)
-
-docker_image = '%s-%s' % (app_name.lower(), git_branch)
+if app_name:
+    docker_image = '%s-%s' % (app_name.lower(), git_branch)
+else:
+    docker_image = default_image
 #TODO: guess DockerFile
 docker_file_path = os.path.join(app_path, 'container', 'dev')
 if not os.path.exists(os.path.join(docker_file_path,'Dockerfile')):
@@ -92,8 +93,7 @@ cmd_run = '''docker run -it --rm \
 -e DISPLAY \
 --workdir="/current_dir" \
 --net=host \
-%(docker_image)s
-''' % locals()
+%(docker_image)s''' % locals()
 
 if args.command == 'build':
     if docker_file_path is None:
@@ -105,8 +105,16 @@ if args.command == 'build':
 elif args.command == 'run':
     #--hostname="%(docker_image)s" \
     print 'exec :', cmd_run
-    if not args.dry:
-        subprocess.call(cmd_run, shell=True)
+    if os.path.exists(os.path.join(app_path, 'container', 'dev', 'autoexec_docker')):
+        print 'exec autoexec_docker :', cmd_run+" sh -c '/sbin/setuser alan /current_dir/container/dev/autoexec_docker'"
+        if not args.dry:
+            #subprocess.call(cmd_run, shell=True)
+            subprocess.call(cmd_run+" sh -c '/sbin/setuser alan /current_dir/container/dev/autoexec_docker'", shell=True)
+    else:
+        print 'exec default :', cmd_run
+        if not args.dry:
+            subprocess.call(cmd_run, shell=True)
+
 elif args.command == 'bootstrap':
     # Create the default Dockerfile path
     if not os.path.exists(docker_file_path):
