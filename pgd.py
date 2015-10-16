@@ -13,10 +13,11 @@ import argparse
 print 'pgd'
 parser = argparse.ArgumentParser(prog='pgd', description='Python Git Docker simple integrator',
         formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("command", choices=['run', 'build', 'info'], default = 'run',
+parser.add_argument("command", choices=['run', 'build', 'info', 'bootstrap'], default = 'run',
         help='''Action to perform :
 %(prog)s run : run the container for the current project/branch
 %(prog)s build : build the container for the current project/branch
+%(prog)s bootstrap : create a basic Dockerfile
 %(prog)s info : output info only
 ''')
 parser.add_argument('-d', '--dry', action='store_true',
@@ -29,7 +30,7 @@ args = parser.parse_args()
 #print __file__
 FNULL = open(os.devnull, 'w')
 
-default_image = 'phentz/devpy'
+default_image = 'phentz/devpy' #:latest ?
 current_dir = os.getcwd()
 app_name = None
 git_branch = None
@@ -46,6 +47,10 @@ try:
 except subprocess.CalledProcessError:
     pass
 
+#output = git_branch = subprocess.check_output('git rev-parse --is-inside-work-tree',
+#    stderr=FNULL, shell=True).strip().lower())
+#print output
+
 if app_name is None:
     print "This is not a git repository !"
     sys.exit(0)
@@ -53,6 +58,10 @@ if app_name is None:
 docker_image = '%s-%s' % (app_name.lower(), git_branch)
 #TODO: guess DockerFile
 docker_file_path = os.path.join(app_path, 'container', 'dev')
+if not os.path.exists(os.path.join(docker_file_path,'Dockerfile')):
+    docker_file_path = current_dir #app_path
+    if not os.path.exists(os.path.join(docker_file_path, 'Dockerfile')):
+        docker_file_path = None
 #extra_args = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else ''
 
 print 'App name : %s' % app_name
@@ -63,10 +72,8 @@ print 'DockerFile path : %s' % docker_file_path
 #    print 'extra_args : %s' % extra_args
 
 
-#docker_image_found = False
 try:
     subprocess.check_output('docker images | grep %s' % docker_image, shell=True).strip()
-    #docker_image_found = True
 except:
     if args.command == 'run':
         print 'Docker image %(docker_image)s not found, use default image %(default_image)s' % locals()
@@ -89,6 +96,9 @@ cmd_run = '''docker run -it --rm \
 ''' % locals()
 
 if args.command == 'build':
+    if docker_file_path is None:
+        print 'Dockerfile not found !'
+        sys.exit(0)
     print 'exec :', cmd_build
     if not args.dry:
         subprocess.call(cmd_build, shell=True)
@@ -97,6 +107,19 @@ elif args.command == 'run':
     print 'exec :', cmd_run
     if not args.dry:
         subprocess.call(cmd_run, shell=True)
+elif args.command == 'bootstrap':
+    # Create the default Dockerfile path
+    if not os.path.exists(docker_file_path):
+        print 'Creating folder %s ...' % docker_file_path
+        os.makedirs(docker_file_path)
+    # Create the default Dockerfile
+    docker_file = os.path.join(docker_file_path, 'Dockerfile')
+    if not os.path.exists(docker_file):
+        print 'Creating file %s ...' % docker_file
+        with open(docker_file, 'w') as f:
+            f.write('''FROM %s:latest\n''' % default_image)
+    else:
+        print 'A Dockerfile already exists in  %s !' % docker_file
 elif args.command == 'info':
     print 'App path : %s' % app_path
     print 'current_dir : %s' % current_dir
