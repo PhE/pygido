@@ -33,18 +33,29 @@ Symlink the pgd.py script ::
   sudo ln -s `pwd`/pygido/pgd.py /usr/bin/pgd
 
 
-Usage
----------
-
-Run the container for the current project/branch ::
-
-    pgd run
-
+Basic usage
+--------------
 
 Build the container for the current project/branch ::
 
   pgd build
 
+
+Run the container for the current project/branch ::
+
+  pgd run
+
+
+Multiple Dockerfile
+------------------------
+
+When switching to a different Dockerfile, you must rebuild the image :
+
+  pgd build --DockerfilePath container/prod
+
+Then run it :
+
+  pgd run
 
 
 TODO

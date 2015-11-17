@@ -10,27 +10,43 @@ import subprocess
 import sys
 import argparse
 
+
 print 'pgd'
-parser = argparse.ArgumentParser(prog='pgd', description='Python Git Docker simple integrator',
-        formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument("command", choices=['run', 'build', 'info', 'bootstrap'], default = 'run',
-        help='''Action to perform :
+parser = argparse.ArgumentParser(prog='pgd',
+                                 description='Python Git Docker simple integrator',
+                                 formatter_class=argparse.RawTextHelpFormatter)
+parser.add_argument("command",
+                    choices=['run', 'build', 'info', 'bootstrap'],
+                    default='run',
+                    help='''Action to perform :
 %(prog)s run : run the container for the current project/branch
 %(prog)s build : build the container for the current project/branch
 %(prog)s bootstrap : create a basic Dockerfile
 %(prog)s info : output info only
 ''')
-parser.add_argument('-d', '--dry', action='store_true',
-        help="No action. Show the actions that would occur but do not actually start or build a container.")
+parser.add_argument('-d', '--dry',
+                    action='store_true',
+                    help="No action. Show the actions that would occur but do not actually start or build a container.")
+parser.add_argument('-D', '--DockerfilePath',
+                    default=os.path.join('container', 'dev'),
+                    help="Set the path to the Dockerfile relative to the project root.")
+parser.add_argument('-x', '--autoexec',
+                    default=os.path.join(
+                        'container', 'dev', 'autoexec_docker'),
+                    help="Relative path to the executable file to run inside the container.")
+parser.add_argument('-u', '--user',
+                    default='alan',
+                    help="User who run the main container process.")
+
 args = parser.parse_args()
 
 
 #command = sys.argv[1] if len(sys.argv) > 1 else 'run'
 
-#print __file__
+# print __file__
 FNULL = open(os.devnull, 'w')
 
-default_image = 'phentz/devpy' #:latest ?
+default_image = 'phentz/devpy'  # :latest ?
 current_dir = os.getcwd()
 app_name = None
 git_branch = None
@@ -38,10 +54,10 @@ app_path = None
 tmp_path = os.getcwd()
 try:
     while tmp_path <> '':
-        #TODO: disable output
+        # TODO: disable output
         git_branch = subprocess.check_output(
-                'cd %s && git rev-parse --abbrev-ref HEAD' % tmp_path,
-                stderr=FNULL, shell=True).strip().lower()
+            'cd %s && git rev-parse --abbrev-ref HEAD' % tmp_path,
+            stderr=FNULL, shell=True).strip().lower()
         app_path = tmp_path
         tmp_path, app_name = os.path.split(tmp_path)
 except subprocess.CalledProcessError:
@@ -49,18 +65,18 @@ except subprocess.CalledProcessError:
 if app_name is None:
     app_path = current_dir
 
-#output = git_branch = subprocess.check_output('git rev-parse --is-inside-work-tree',
+# output = git_branch = subprocess.check_output('git rev-parse --is-inside-work-tree',
 #    stderr=FNULL, shell=True).strip().lower())
-#print output
+# print output
 
 if app_name:
     docker_image = '%s-%s' % (app_name.lower(), git_branch)
 else:
     docker_image = default_image
-#TODO: guess DockerFile
-docker_file_path = os.path.join(app_path, 'container', 'dev')
-if not os.path.exists(os.path.join(docker_file_path,'Dockerfile')):
-    docker_file_path = current_dir #app_path
+# TODO: guess DockerFile
+docker_file_path = os.path.join(app_path, args.DockerfilePath)
+if not os.path.exists(os.path.join(docker_file_path, 'Dockerfile')):
+    docker_file_path = current_dir  # app_path
     if not os.path.exists(os.path.join(docker_file_path, 'Dockerfile')):
         docker_file_path = None
 #extra_args = ' '.join(sys.argv[2:]) if len(sys.argv) > 2 else ''
@@ -69,22 +85,23 @@ print 'App name : %s' % app_name
 print 'Git branch : %s' % git_branch
 print 'Docker image : %s' % docker_image
 print 'DockerFile path : %s' % docker_file_path
-#if extra_args <> '':
+# if extra_args <> '':
 #    print 'extra_args : %s' % extra_args
 
 
 try:
-    subprocess.check_output('docker images | grep %s' % docker_image, shell=True).strip()
+    subprocess.check_output('docker images | grep %s' %
+                            docker_image, shell=True).strip()
 except:
     if args.command == 'run':
         print 'Docker image %(docker_image)s not found, use default image %(default_image)s' % locals()
         docker_image = default_image
 
 
-#TODO: add  $1 $2 $3 $4 $5
+# TODO: add  $1 $2 $3 $4 $5
 cmd_build = 'docker build -t %(docker_image)s %(docker_file_path)s' % locals()
 # thanks to http://fabiorehm.com/blog/2014/09/11/running-gui-apps-with-docker/
-#TODO: add  $1 $2 $3 $4 $5
+# TODO: add  $1 $2 $3 $4 $5
 cmd_run = '''docker run -it --rm \
 -v %(app_path)s:/var/myapp \
 -v %(app_path)s:/var/%(app_name)s \
@@ -105,11 +122,15 @@ if args.command == 'build':
 elif args.command == 'run':
     #--hostname="%(docker_image)s" \
     print 'exec :', cmd_run
-    if os.path.exists(os.path.join(app_path, 'container', 'dev', 'autoexec_docker')):
-        print 'exec autoexec_docker :', cmd_run+" sh -c '/sbin/setuser alan /current_dir/container/dev/autoexec_docker'"
+    autoexec_file = os.path.join(app_path, args.autoexec)
+    if os.path.exists(autoexec_file) and len(args.autoexec) > 0:
+        if args.user not in (None, 'root'):
+            cmd_run = cmd_run + " sh -c '/sbin/setuser %s /current_dir/%s'" % (args.user, args.autoexec)
+        else:
+            cmd_run = cmd_run + " /current_dir/%s" % args.autoexec
+        print 'exec autoexec_docker :', cmd_run
         if not args.dry:
-            #subprocess.call(cmd_run, shell=True)
-            subprocess.call(cmd_run+" sh -c '/sbin/setuser alan /current_dir/container/dev/autoexec_docker'", shell=True)
+            subprocess.call(cmd_run, shell=True)
     else:
         print 'exec default :', cmd_run
         if not args.dry:
